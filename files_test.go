@@ -62,8 +62,7 @@ func TestFiles_ListFolder(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-	assert.Len(t, out.Entries, 1)
-	assert.Equal(t, "/readme.md", out.Entries[0].PathLower)
+	assert.Len(t, out.Entries, 2)
 }
 
 func TestFiles_Search(t *testing.T) {
