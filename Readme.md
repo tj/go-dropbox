@@ -1,7 +1,5 @@
 
-[![GoDoc](https://godoc.org/github.com/tj/go-dropbox?status.svg)](https://godoc.org/github.com/tj/go-dropbox)
-
-[![Build Status](https://semaphoreci.com/api/v1/projects/bc0bfd8b-73c9-45ba-b988-00f9e285e6ef/617305/badge.svg)](https://semaphoreci.com/tj/go-dropbox)
+[![GoDoc](https://godoc.org/github.com/tj/go-dropbox?status.svg)](https://godoc.org/github.com/tj/go-dropbox) [![Build Status](https://semaphoreci.com/api/v1/projects/bc0bfd8b-73c9-45ba-b988-00f9e285e6ef/617305/badge.svg)](https://semaphoreci.com/tj/go-dropbox)
 
 # Dropbox
 
