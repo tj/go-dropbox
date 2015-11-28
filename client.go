@@ -3,10 +3,10 @@ package dropbox
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 // Client implements a Dropbox client. You may use the Files and Users
@@ -74,14 +74,31 @@ func (c *Client) do(req *http.Request) (io.ReadCloser, error) {
 		return nil, err
 	}
 
-	if res.StatusCode >= 400 {
-		defer res.Body.Close()
-		if b, err := ioutil.ReadAll(res.Body); err != nil {
-			return nil, err
+	if res.StatusCode < 400 {
+		return res.Body, err
+	}
+
+	defer res.Body.Close()
+
+	e := &Error{
+		Status:     http.StatusText(res.StatusCode),
+		StatusCode: res.StatusCode,
+	}
+
+	kind := res.Header.Get("Content-Type")
+
+	if strings.Contains(kind, "text/plain") {
+		if b, err := ioutil.ReadAll(res.Body); err == nil {
+			e.Summary = string(b)
+			return nil, e
 		} else {
-			return nil, fmt.Errorf("response %s: %s", res.Status, b)
+			return nil, err
 		}
 	}
 
-	return res.Body, err
+	if err := json.NewDecoder(res.Body).Decode(e); err != nil {
+		return nil, err
+	}
+
+	return nil, e
 }

@@ -224,15 +224,12 @@ func (c *Files) ListFolder(in *ListFolderInput) (out *ListFolderOutput, err erro
 
 // ListFolderContinueInput request input.
 type ListFolderContinueInput struct {
-	Path             string `json:"path"`
-	Recursive        bool   `json:"recursive"`
-	IncludeMediaInfo bool   `json:"include_media_info"`
-	IncludeDeleted   bool   `json:"include_deleted"`
+	Cursor string `json:"cursor"`
 }
 
 // ListFolderContinue pagenates using the cursor from ListFolder.
 func (c *Files) ListFolderContinue(in *ListFolderContinueInput) (out *ListFolderOutput, err error) {
-	body, err := c.call("/files/list_folder_continue", in)
+	body, err := c.call("/files/list_folder/continue", in)
 	if err != nil {
 		return
 	}
@@ -371,4 +368,12 @@ func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err erro
 
 	out = &GetPreviewOutput{body}
 	return
+}
+
+// Open implements http.FileSystem.
+func (c *Files) Open(path string) (*File, error) {
+	return &File{
+		files: c,
+		path:  path,
+	}, nil
 }
