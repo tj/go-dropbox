@@ -110,6 +110,22 @@ func (c *Files) Delete(in *DeleteInput) (out *DeleteOutput, err error) {
 	return
 }
 
+// PermanentlyDeleteInput request input.
+type PermanentlyDeleteInput struct {
+	Path string `json:"path"`
+}
+
+// PermanentlyDelete a file or folder and its contents.
+func (c *Files) PermanentlyDelete(in *PermanentlyDeleteInput) (err error) {
+	body, err := c.call("/files/delete", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	return
+}
+
 // CopyInput request input.
 type CopyInput struct {
 	FromPath string `json:"from_path"`
