@@ -222,6 +222,26 @@ func (c *Files) ListFolder(in *ListFolderInput) (out *ListFolderOutput, err erro
 	return
 }
 
+// ListFolderContinueInput request input.
+type ListFolderContinueInput struct {
+	Path             string `json:"path"`
+	Recursive        bool   `json:"recursive"`
+	IncludeMediaInfo bool   `json:"include_media_info"`
+	IncludeDeleted   bool   `json:"include_deleted"`
+}
+
+// ListFolderContinue pagenates using the cursor from ListFolder.
+func (c *Files) ListFolderContinue(in *ListFolderContinueInput) (out *ListFolderOutput, err error) {
+	body, err := c.call("/files/list_folder_continue", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
 // SearchMode determines how a search is performed.
 type SearchMode string
 
