@@ -298,7 +298,7 @@ type DownloadInput struct {
 	Path string `json:"path"`
 }
 
-// DownloadOutput request input.
+// DownloadOutput request output.
 type DownloadOutput struct {
 	Body io.ReadCloser
 }
@@ -310,5 +310,29 @@ func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
 		return
 	}
 
-	return &DownloadOutput{body}, nil
+	out = &DownloadOutput{body}
+	return
+}
+
+// GetPreviewInput request input.
+type GetPreviewInput struct {
+	Path string `json:"path"`
+}
+
+// GetPreviewOutput request output.
+type GetPreviewOutput struct {
+	Body io.ReadCloser
+}
+
+// GetPreview a preview for a file. Currently previews are only generated for the
+// files with the following extensions: .doc, .docx, .docm, .ppt, .pps, .ppsx,
+// .ppsm, .pptx, .pptm, .xls, .xlsx, .xlsm, .rtf
+func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err error) {
+	body, err := c.download("/files/get_preview", in, nil)
+	if err != nil {
+		return
+	}
+
+	out = &GetPreviewOutput{body}
+	return
 }

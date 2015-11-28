@@ -87,3 +87,13 @@ func TestFiles_Delete(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "/readme.md", out.PathLower)
 }
+
+func TestFiles_GetPreview(t *testing.T) {
+	c := client()
+
+	_, err := c.Files.GetPreview(&GetPreviewInput{
+		Path: "/sample.ppt",
+	})
+
+	assert.NoError(t, err)
+}
