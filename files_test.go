@@ -76,3 +76,14 @@ func TestFiles_Search(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, out.Matches, 1)
 }
+
+func TestFiles_Delete(t *testing.T) {
+	c := client()
+
+	out, err := c.Files.Delete(&DeleteInput{
+		Path: "/Readme.md",
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "/readme.md", out.PathLower)
+}
