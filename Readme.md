@@ -1,4 +1,6 @@
 
+[![GoDoc](https://godoc.org/github.com/tj/go-dropbox?status.svg)](https://godoc.org/github.com/tj/go-dropbox)
+
 # Dropbox
 
  Simple Dropbox v2 client for Go.
