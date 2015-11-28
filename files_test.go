@@ -93,6 +93,7 @@ func TestFiles_GetPreview(t *testing.T) {
 	out, err := c.Files.GetPreview(&GetPreviewInput{
 		Path: "/sample.ppt",
 	})
+	defer out.Body.Close()
 
 	assert.NoError(t, err)
 
