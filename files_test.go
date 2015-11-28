@@ -90,9 +90,14 @@ func TestFiles_Delete(t *testing.T) {
 func TestFiles_GetPreview(t *testing.T) {
 	c := client()
 
-	_, err := c.Files.GetPreview(&GetPreviewInput{
+	out, err := c.Files.GetPreview(&GetPreviewInput{
 		Path: "/sample.ppt",
 	})
 
 	assert.NoError(t, err)
+
+	buf := make([]byte, 4)
+	_, err = out.Body.Read(buf)
+	assert.NoError(t, err)
+	assert.Equal(t, []byte{0x25, 0x50, 0x44, 0x46}, buf, "should have pdf magic number")
 }
