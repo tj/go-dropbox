@@ -3,6 +3,7 @@ package dropbox
 import (
 	"encoding/json"
 	"io"
+	"net/http"
 	"time"
 )
 
@@ -371,7 +372,7 @@ func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err erro
 }
 
 // Open implements http.FileSystem.
-func (c *Files) Open(path string) (*File, error) {
+func (c *Files) Open(path string) (http.File, error) {
 	return &File{
 		files: c,
 		path:  path,
