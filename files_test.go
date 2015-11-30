@@ -67,6 +67,17 @@ func TestFiles_ListFolder(t *testing.T) {
 	assert.True(t, out.HasMore)
 }
 
+func TestFiles_ListFolder_root(t *testing.T) {
+	t.Parallel()
+	c := client()
+
+	_, err := c.Files.ListFolder(&ListFolderInput{
+		Path: "/",
+	})
+
+	assert.NoError(t, err)
+}
+
 func TestFiles_Search(t *testing.T) {
 	c := client()
 

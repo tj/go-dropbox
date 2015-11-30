@@ -212,6 +212,8 @@ type ListFolderOutput struct {
 
 // ListFolder returns the metadata for a file or folder.
 func (c *Files) ListFolder(in *ListFolderInput) (out *ListFolderOutput, err error) {
+	in.Path = normalizePath(in.Path)
+
 	body, err := c.call("/files/list_folder", in)
 	if err != nil {
 		return
@@ -285,6 +287,8 @@ type SearchOutput struct {
 
 // Search for files and folders.
 func (c *Files) Search(in *SearchInput) (out *SearchOutput, err error) {
+	in.Path = normalizePath(in.Path)
+
 	if in.Mode == "" {
 		in.Mode = SearchModeFilename
 	}
@@ -368,4 +372,13 @@ func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err erro
 
 	out = &GetPreviewOutput{body}
 	return
+}
+
+// Normalize path so people can use "/" as they expect.
+func normalizePath(s string) string {
+	if s == "/" {
+		return ""
+	} else {
+		return s
+	}
 }
