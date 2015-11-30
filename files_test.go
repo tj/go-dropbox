@@ -81,13 +81,13 @@ func TestFiles_ListFolder_root(t *testing.T) {
 func TestFiles_Search(t *testing.T) {
 	c := client()
 
-	_, err := c.Files.Search(&SearchInput{
-		Path:  "/list",
-		Query: "500",
+	out, err := c.Files.Search(&SearchInput{
+		Path:  "/",
+		Query: "hello",
 	})
 
 	assert.NoError(t, err)
-	// TODO: busted? assert len
+	assert.Equal(t, 2, len(out.Matches))
 }
 
 func TestFiles_Delete(t *testing.T) {
