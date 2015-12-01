@@ -7,9 +7,18 @@
 
  For a higher level client take a look at [go-dropy](https://github.com/tj/go-dropy).
 
-# About
+## About
 
  Modelled more or less 1:1 with the API for consistency and parity with the [official documentation](https://www.dropbox.com/developers/documentation/http). More sugar should be implemented on top.
+
+## Testing
+
+ To manually run tests use the test account access token:
+
+```
+$ export DROPBOX_ACCESS_TOKEN=oENFkq_oIVAAAAAAAAAAC8gE3wIUFMEraPBL-D71Aq2C4zuh1l4oDn5FiWSdVVlL
+$ go test -v
+```
 
 # License
 
