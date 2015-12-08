@@ -13,8 +13,9 @@ import (
 // clients directly if preferred, however Client exposes them both.
 type Client struct {
 	*Config
-	Users *Users
-	Files *Files
+	Users   *Users
+	Files   *Files
+	Sharing *Sharing
 }
 
 // New client.
@@ -22,6 +23,7 @@ func New(config *Config) *Client {
 	c := &Client{Config: config}
 	c.Users = &Users{c}
 	c.Files = &Files{c}
+	c.Sharing = &Sharing{c}
 	return c
 }
 
