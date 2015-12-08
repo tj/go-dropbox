@@ -10,7 +10,7 @@ func TestSharing_CreateSharedLink(t *testing.T) {
 	c := client()
 	out, err := c.Sharing.CreateSharedLink(&CreateSharedLinkInput{
 		Path:     "/Readme.md",
-		ShortUrl: true,
+		ShortURL: true,
 	})
 
 	assert.NoError(t, err, "error sharing file")

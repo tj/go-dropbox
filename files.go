@@ -251,7 +251,7 @@ const (
 	SearchModeDeletedFilename               = "deleted_filename"
 )
 
-// SearchMatch represents the type of match made.
+// SearchMatchType represents the type of match made.
 type SearchMatchType string
 
 // Supported search match types.
