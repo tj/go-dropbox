@@ -351,16 +351,22 @@ func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
 	return
 }
 
+// ThumbnailFormat determines the format of the thumbnail.
+type ThumbnailFormat string
+
 const (
 	// GetThumbnailFormatJPEG specifies a JPG thumbnail
-	GetThumbnailFormatJPEG = "jpeg"
+	GetThumbnailFormatJPEG ThumbnailFormat = "jpeg"
 	// GetThumbnailFormatPNG specifies a PNG thumbnail
 	GetThumbnailFormatPNG = "png"
 )
 
+// ThumbnailFormat determines the size of the thumbnail.
+type ThumbnailSize string
+
 const (
 	// GetThumbnailSizeW32H32 specifies a size of 32 by 32 px
-	GetThumbnailSizeW32H32 = "w32h32"
+	GetThumbnailSizeW32H32 ThumbnailSize = "w32h32"
 	// GetThumbnailSizeW64H64 specifies a size of 64 by 64 px
 	GetThumbnailSizeW64H64 = "w64h64"
 	// GetThumbnailSizeW128H128 specifies a size of 128 by 128 px
@@ -373,9 +379,9 @@ const (
 
 // GetThumbnailInput request input.
 type GetThumbnailInput struct {
-	Path   string `json:"path"`
-	Format string `json:"format"`
-	Size   string `json:"size"`
+	Path   string          `json:"path"`
+	Format ThumbnailFormat `json:"format"`
+	Size   ThumbnailSize   `json:"size"`
 }
 
 // GetThumbnailOutput request output.
