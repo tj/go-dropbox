@@ -351,6 +351,56 @@ func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
 	return
 }
 
+// ThumbnailFormat determines the format of the thumbnail.
+type ThumbnailFormat string
+
+const (
+	// GetThumbnailFormatJPEG specifies a JPG thumbnail
+	GetThumbnailFormatJPEG ThumbnailFormat = "jpeg"
+	// GetThumbnailFormatPNG specifies a PNG thumbnail
+	GetThumbnailFormatPNG = "png"
+)
+
+// ThumbnailFormat determines the size of the thumbnail.
+type ThumbnailSize string
+
+const (
+	// GetThumbnailSizeW32H32 specifies a size of 32 by 32 px
+	GetThumbnailSizeW32H32 ThumbnailSize = "w32h32"
+	// GetThumbnailSizeW64H64 specifies a size of 64 by 64 px
+	GetThumbnailSizeW64H64 = "w64h64"
+	// GetThumbnailSizeW128H128 specifies a size of 128 by 128 px
+	GetThumbnailSizeW128H128 = "w128h128"
+	// GetThumbnailSizeW640H480 specifies a size of 640 by 480 px
+	GetThumbnailSizeW640H480 = "w640h480"
+	// GetThumbnailSizeW1024H768 specifies a size of 1024 by 768 px
+	GetThumbnailSizeW1024H768 = "w1024h768"
+)
+
+// GetThumbnailInput request input.
+type GetThumbnailInput struct {
+	Path   string          `json:"path"`
+	Format ThumbnailFormat `json:"format"`
+	Size   ThumbnailSize   `json:"size"`
+}
+
+// GetThumbnailOutput request output.
+type GetThumbnailOutput struct {
+	Body io.ReadCloser
+}
+
+// GetThumbnail a thumbnail for a file. Currently thumbnails are only generated for the
+// files with the following extensions: png, jpeg, png, tiff, tif, gif and bmp.
+func (c *Files) GetThumbnail(in *GetThumbnailInput) (out *GetThumbnailOutput, err error) {
+	body, err := c.download("/files/get_thumbnail", in, nil)
+	if err != nil {
+		return
+	}
+
+	out = &GetThumbnailOutput{body}
+	return
+}
+
 // GetPreviewInput request input.
 type GetPreviewInput struct {
 	Path string `json:"path"`
