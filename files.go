@@ -427,6 +427,30 @@ func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err erro
 	return
 }
 
+// ListRevisionsInput request input.
+type ListRevisionsInput struct {
+	Path  string `json:"path"`
+	Limit uint64 `json:"limit,omitempty"`
+}
+
+// ListRevisionsOutput request output.
+type ListRevisionsOutput struct {
+	IsDeleted bool
+	Entries   []*Metadata
+}
+
+// ListRevisions gets the revisions of the specified file.
+func (c *Files) ListRevisions(in *ListRevisionsInput) (out *ListRevisionsOutput, err error) {
+	body, err := c.call("/files/list_revisions", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
 // Normalize path so people can use "/" as they expect.
 func normalizePath(s string) string {
 	if s == "/" {

@@ -172,3 +172,13 @@ func TestFiles_GetPreview(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, []byte{0x25, 0x50, 0x44, 0x46}, buf, "should have pdf magic number")
 }
+
+func TestFiles_ListRevisions(t *testing.T) {
+	c := client()
+
+	out, err := c.Files.ListRevisions(&ListRevisionsInput{Path: "/sample.ppt"})
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, out.Entries)
+	assert.False(t, out.IsDeleted)
+}
