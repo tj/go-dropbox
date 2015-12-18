@@ -35,6 +35,10 @@ func TestFiles_Download(t *testing.T) {
 	assert.NoError(t, err, "error downloading")
 	defer out.Body.Close()
 
+	fi, err := os.Lstat("Readme.md")
+	assert.NoError(t, err, "error getting local file info")
+	assert.Equal(t, fi.Size(), out.Length, "Readme.md length mismatch")
+
 	remote, err := ioutil.ReadAll(out.Body)
 	assert.NoError(t, err, "error reading remote")
 
@@ -142,6 +146,8 @@ func TestFiles_GetThumbnail(t *testing.T) {
 	}
 	defer out.Body.Close()
 
+	assert.NotEmpty(t, out.Length, "length should not be 0")
+
 	buf := make([]byte, 11)
 	_, err = out.Body.Read(buf)
 	assert.NoError(t, err)
@@ -158,6 +164,8 @@ func TestFiles_GetPreview(t *testing.T) {
 	defer out.Body.Close()
 
 	assert.NoError(t, err)
+
+	assert.NotEmpty(t, out.Length, "length should not be 0")
 
 	buf := make([]byte, 4)
 	_, err = out.Body.Read(buf)

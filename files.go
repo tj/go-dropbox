@@ -320,7 +320,7 @@ type UploadOutput struct {
 
 // Upload a file smaller than 150MB.
 func (c *Files) Upload(in *UploadInput) (out *UploadOutput, err error) {
-	body, err := c.download("/files/upload", in, in.Reader)
+	body, _, err := c.download("/files/upload", in, in.Reader)
 	if err != nil {
 		return
 	}
@@ -337,17 +337,18 @@ type DownloadInput struct {
 
 // DownloadOutput request output.
 type DownloadOutput struct {
-	Body io.ReadCloser
+	Body   io.ReadCloser
+	Length int64
 }
 
 // Download a file.
 func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
-	body, err := c.download("/files/download", in, nil)
+	body, l, err := c.download("/files/download", in, nil)
 	if err != nil {
 		return
 	}
 
-	out = &DownloadOutput{body}
+	out = &DownloadOutput{body, l}
 	return
 }
 
@@ -386,18 +387,19 @@ type GetThumbnailInput struct {
 
 // GetThumbnailOutput request output.
 type GetThumbnailOutput struct {
-	Body io.ReadCloser
+	Body   io.ReadCloser
+	Length int64
 }
 
 // GetThumbnail a thumbnail for a file. Currently thumbnails are only generated for the
 // files with the following extensions: png, jpeg, png, tiff, tif, gif and bmp.
 func (c *Files) GetThumbnail(in *GetThumbnailInput) (out *GetThumbnailOutput, err error) {
-	body, err := c.download("/files/get_thumbnail", in, nil)
+	body, l, err := c.download("/files/get_thumbnail", in, nil)
 	if err != nil {
 		return
 	}
 
-	out = &GetThumbnailOutput{body}
+	out = &GetThumbnailOutput{body, l}
 	return
 }
 
@@ -408,19 +410,20 @@ type GetPreviewInput struct {
 
 // GetPreviewOutput request output.
 type GetPreviewOutput struct {
-	Body io.ReadCloser
+	Body   io.ReadCloser
+	Length int64
 }
 
 // GetPreview a preview for a file. Currently previews are only generated for the
 // files with the following extensions: .doc, .docx, .docm, .ppt, .pps, .ppsx,
 // .ppsm, .pptx, .pptm, .xls, .xlsx, .xlsm, .rtf
 func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err error) {
-	body, err := c.download("/files/get_preview", in, nil)
+	body, l, err := c.download("/files/get_preview", in, nil)
 	if err != nil {
 		return
 	}
 
-	out = &GetPreviewOutput{body}
+	out = &GetPreviewOutput{body, l}
 	return
 }
 
