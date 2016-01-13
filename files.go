@@ -3,6 +3,7 @@ package dropbox
 import (
 	"encoding/json"
 	"io"
+	"net/http"
 	"time"
 )
 
@@ -50,17 +51,21 @@ type GetMetadataInput struct {
 // GetMetadataOutput request output.
 type GetMetadataOutput struct {
 	Metadata
+	Header http.Header
 }
 
 // GetMetadata returns the metadata for a file or folder.
 func (c *Files) GetMetadata(in *GetMetadataInput) (out *GetMetadataOutput, err error) {
-	body, err := c.call("/files/get_metadata", in)
+	body, hdr, err := c.call("/files/get_metadata", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -74,17 +79,21 @@ type CreateFolderOutput struct {
 	Name      string `json:"name"`
 	PathLower string `json:"path_lower"`
 	ID        string `json:"id"`
+	Header    http.Header
 }
 
 // CreateFolder creates a folder.
 func (c *Files) CreateFolder(in *CreateFolderInput) (out *CreateFolderOutput, err error) {
-	body, err := c.call("/files/create_folder", in)
+	body, hdr, err := c.call("/files/create_folder", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -96,17 +105,21 @@ type DeleteInput struct {
 // DeleteOutput request output.
 type DeleteOutput struct {
 	Metadata
+	Header http.Header
 }
 
 // Delete a file or folder and its contents.
 func (c *Files) Delete(in *DeleteInput) (out *DeleteOutput, err error) {
-	body, err := c.call("/files/delete", in)
+	body, hdr, err := c.call("/files/delete", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -117,7 +130,7 @@ type PermanentlyDeleteInput struct {
 
 // PermanentlyDelete a file or folder and its contents.
 func (c *Files) PermanentlyDelete(in *PermanentlyDeleteInput) (err error) {
-	body, err := c.call("/files/delete", in)
+	body, _, err := c.call("/files/delete", in)
 	if err != nil {
 		return
 	}
@@ -135,17 +148,21 @@ type CopyInput struct {
 // CopyOutput request output.
 type CopyOutput struct {
 	Metadata
+	Header http.Header
 }
 
 // Copy a file or folder to a different location.
 func (c *Files) Copy(in *CopyInput) (out *CopyOutput, err error) {
-	body, err := c.call("/files/copy", in)
+	body, hdr, err := c.call("/files/copy", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -158,17 +175,21 @@ type MoveInput struct {
 // MoveOutput request output.
 type MoveOutput struct {
 	Metadata
+	Header http.Header
 }
 
 // Move a file or folder to a different location.
 func (c *Files) Move(in *MoveInput) (out *MoveOutput, err error) {
-	body, err := c.call("/files/move", in)
+	body, hdr, err := c.call("/files/move", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -181,17 +202,21 @@ type RestoreInput struct {
 // RestoreOutput request output.
 type RestoreOutput struct {
 	Metadata
+	Header http.Header
 }
 
 // Restore a file to a specific revision.
 func (c *Files) Restore(in *RestoreInput) (out *RestoreOutput, err error) {
-	body, err := c.call("/files/restore", in)
+	body, hdr, err := c.call("/files/restore", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -208,19 +233,23 @@ type ListFolderOutput struct {
 	Cursor  string `json:"cursor"`
 	HasMore bool   `json:"has_more"`
 	Entries []*Metadata
+	Header  http.Header
 }
 
 // ListFolder returns the metadata for a file or folder.
 func (c *Files) ListFolder(in *ListFolderInput) (out *ListFolderOutput, err error) {
 	in.Path = normalizePath(in.Path)
 
-	body, err := c.call("/files/list_folder", in)
+	body, hdr, err := c.call("/files/list_folder", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -231,13 +260,16 @@ type ListFolderContinueInput struct {
 
 // ListFolderContinue pagenates using the cursor from ListFolder.
 func (c *Files) ListFolderContinue(in *ListFolderContinueInput) (out *ListFolderOutput, err error) {
-	body, err := c.call("/files/list_folder/continue", in)
+	body, hdr, err := c.call("/files/list_folder/continue", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -283,6 +315,7 @@ type SearchOutput struct {
 	Matches []*SearchMatch `json:"matches"`
 	More    bool           `json:"more"`
 	Start   uint64         `json:"start"`
+	Header  http.Header
 }
 
 // Search for files and folders.
@@ -293,13 +326,16 @@ func (c *Files) Search(in *SearchInput) (out *SearchOutput, err error) {
 		in.Mode = SearchModeFilename
 	}
 
-	body, err := c.call("/files/search", in)
+	body, hdr, err := c.call("/files/search", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -316,17 +352,21 @@ type UploadInput struct {
 // UploadOutput request output.
 type UploadOutput struct {
 	Metadata
+	Header http.Header
 }
 
 // Upload a file smaller than 150MB.
 func (c *Files) Upload(in *UploadInput) (out *UploadOutput, err error) {
-	body, _, err := c.download("/files/upload", in, in.Reader)
+	body, _, hdr, err := c.download("/files/upload", in, in.Reader)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -339,16 +379,17 @@ type DownloadInput struct {
 type DownloadOutput struct {
 	Body   io.ReadCloser
 	Length int64
+	Header http.Header
 }
 
 // Download a file.
 func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
-	body, l, err := c.download("/files/download", in, nil)
+	body, l, hdr, err := c.download("/files/download", in, nil)
 	if err != nil {
 		return
 	}
 
-	out = &DownloadOutput{body, l}
+	out = &DownloadOutput{body, l, hdr}
 	return
 }
 
@@ -389,17 +430,18 @@ type GetThumbnailInput struct {
 type GetThumbnailOutput struct {
 	Body   io.ReadCloser
 	Length int64
+	Header http.Header
 }
 
 // GetThumbnail a thumbnail for a file. Currently thumbnails are only generated for the
 // files with the following extensions: png, jpeg, png, tiff, tif, gif and bmp.
 func (c *Files) GetThumbnail(in *GetThumbnailInput) (out *GetThumbnailOutput, err error) {
-	body, l, err := c.download("/files/get_thumbnail", in, nil)
+	body, l, hdr, err := c.download("/files/get_thumbnail", in, nil)
 	if err != nil {
 		return
 	}
 
-	out = &GetThumbnailOutput{body, l}
+	out = &GetThumbnailOutput{body, l, hdr}
 	return
 }
 
@@ -412,18 +454,19 @@ type GetPreviewInput struct {
 type GetPreviewOutput struct {
 	Body   io.ReadCloser
 	Length int64
+	Header http.Header
 }
 
 // GetPreview a preview for a file. Currently previews are only generated for the
 // files with the following extensions: .doc, .docx, .docm, .ppt, .pps, .ppsx,
 // .ppsm, .pptx, .pptm, .xls, .xlsx, .xlsm, .rtf
 func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err error) {
-	body, l, err := c.download("/files/get_preview", in, nil)
+	body, l, hdr, err := c.download("/files/get_preview", in, nil)
 	if err != nil {
 		return
 	}
 
-	out = &GetPreviewOutput{body, l}
+	out = &GetPreviewOutput{body, l, hdr}
 	return
 }
 
@@ -437,17 +480,21 @@ type ListRevisionsInput struct {
 type ListRevisionsOutput struct {
 	IsDeleted bool
 	Entries   []*Metadata
+	Header    http.Header
 }
 
 // ListRevisions gets the revisions of the specified file.
 func (c *Files) ListRevisions(in *ListRevisionsInput) (out *ListRevisionsOutput, err error) {
-	body, err := c.call("/files/list_revisions", in)
+	body, hdr, err := c.call("/files/list_revisions", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 

@@ -28,37 +28,37 @@ func New(config *Config) *Client {
 }
 
 // call rpc style endpoint.
-func (c *Client) call(path string, in interface{}) (io.ReadCloser, error) {
+func (c *Client) call(path string, in interface{}) (io.ReadCloser, http.Header, error) {
 	url := "https://api.dropboxapi.com/2" + path
 
 	body, err := json.Marshal(in)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.AccessToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	r, _, err := c.do(req)
-	return r, err
+	r, _, hdr, err := c.do(req)
+	return r, hdr, err
 }
 
 // download style endpoint.
-func (c *Client) download(path string, in interface{}, r io.Reader) (io.ReadCloser, int64, error) {
+func (c *Client) download(path string, in interface{}, r io.Reader) (io.ReadCloser, int64, http.Header, error) {
 	url := "https://content.dropboxapi.com/2" + path
 
 	body, err := json.Marshal(in)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 
 	req, err := http.NewRequest("POST", url, r)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.AccessToken)
 	req.Header.Set("Dropbox-API-Arg", string(body))
@@ -71,14 +71,14 @@ func (c *Client) download(path string, in interface{}, r io.Reader) (io.ReadClos
 }
 
 // perform the request.
-func (c *Client) do(req *http.Request) (io.ReadCloser, int64, error) {
+func (c *Client) do(req *http.Request) (io.ReadCloser, int64, http.Header, error) {
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, nil, err
 	}
 
 	if res.StatusCode < 400 {
-		return res.Body, res.ContentLength, err
+		return res.Body, res.ContentLength, res.Header, err
 	}
 
 	defer res.Body.Close()
@@ -93,15 +93,15 @@ func (c *Client) do(req *http.Request) (io.ReadCloser, int64, error) {
 	if strings.Contains(kind, "text/plain") {
 		if b, err := ioutil.ReadAll(res.Body); err == nil {
 			e.Summary = string(b)
-			return nil, 0, e
+			return nil, 0, res.Header, e
 		} else {
-			return nil, 0, err
+			return nil, 0, res.Header, err
 		}
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(e); err != nil {
-		return nil, 0, err
+		return nil, 0, res.Header, err
 	}
 
-	return nil, 0, e
+	return nil, 0, res.Header, e
 }

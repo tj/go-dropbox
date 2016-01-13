@@ -2,6 +2,7 @@ package dropbox
 
 import (
 	"encoding/json"
+	"net/http"
 	"time"
 )
 
@@ -33,6 +34,7 @@ type CreateSharedLinkOutput struct {
 		Tag VisibilityType `json:".tag"`
 	} `json:"visibility"`
 	Expires time.Time `json:"expires,omitempty"`
+	Header  http.Header
 }
 
 // VisibilityType determines who can access the link.
@@ -49,12 +51,15 @@ const (
 
 // CreateSharedLink returns a shared link.
 func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateSharedLinkOutput, err error) {
-	body, err := c.call("/sharing/create_shared_link", in)
+	body, hdr, err := c.call("/sharing/create_shared_link", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }

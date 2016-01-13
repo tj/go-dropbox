@@ -2,6 +2,7 @@ package dropbox
 
 import (
 	"encoding/json"
+	"net/http"
 )
 
 // Users client for user accounts.
@@ -32,17 +33,21 @@ type GetAccountOutput struct {
 		FamiliarName string `json:"familiar_name"`
 		DisplayName  string `json:"display_name"`
 	} `json:"name"`
+	Header http.Header
 }
 
 // GetAccount returns information about a user's account.
 func (c *Users) GetAccount(in *GetAccountInput) (out *GetAccountOutput, err error) {
-	body, err := c.call("/users/get_account", in)
+	body, hdr, err := c.call("/users/get_account", in)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -63,17 +68,21 @@ type GetCurrentAccountOutput struct {
 		Tag string `json:".tag"`
 	} `json:"account_type"`
 	Country string `json:"country"`
+	Header  http.Header
 }
 
 // GetCurrentAccount returns information about the current user's account.
 func (c *Users) GetCurrentAccount() (out *GetCurrentAccountOutput, err error) {
-	body, err := c.call("/users/get_current_account", nil)
+	body, hdr, err := c.call("/users/get_current_account", nil)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
 
@@ -84,16 +93,20 @@ type GetSpaceUsageOutput struct {
 		Used      uint64 `json:"used"`
 		Allocated uint64 `json:"allocated"`
 	} `json:"allocation"`
+	Header http.Header
 }
 
 // GetSpaceUsage returns space usage information for the current user's account.
 func (c *Users) GetSpaceUsage() (out *GetSpaceUsageOutput, err error) {
-	body, err := c.call("/users/get_space_usage", nil)
+	body, hdr, err := c.call("/users/get_space_usage", nil)
 	if err != nil {
 		return
 	}
 	defer body.Close()
 
 	err = json.NewDecoder(body).Decode(&out)
+	if err == nil {
+		out.Header = hdr
+	}
 	return
 }
