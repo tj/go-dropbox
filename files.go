@@ -506,3 +506,17 @@ func normalizePath(s string) string {
 		return s
 	}
 }
+
+// UnmarshalDropboxApiResult unmarshals the Dropbox-Api-Result header.
+func UnmarshalDropboxApiResult(header http.Header) *Metadata {
+	v := header.Get("Dropbox-Api-Result")
+	if v == "" {
+		return nil
+	}
+	var m Metadata
+	err := json.Unmarshal([]byte(v), &m)
+	if err != nil {
+		return nil
+	}
+	return &m
+}

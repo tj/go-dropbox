@@ -3,6 +3,7 @@ package dropbox
 import (
 	"bytes"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
 
@@ -181,4 +182,36 @@ func TestFiles_ListRevisions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, out.Entries)
 	assert.False(t, out.IsDeleted)
+}
+
+func TestFiles_UnmarshalDropboxApiResultNotSet(t *testing.T) {
+	hdr := http.Header{
+		"Date":                   []string{"Wed, 13 Jan 2016 03:14:59 GMT"},
+		"Content-Length":         []string{"808"},
+		"Server":                 []string{"nginx"},
+		"X-Server-Response-Time": []string{"740"},
+		"X-Dropbox-Request-Id":   []string{"2053baf502dc4d4d64f2201a12f0ce26"},
+		"X-Robots-Tag":           []string{"noindex", "nofollow", "noimageindex"},
+	}
+
+	v := UnmarshalDropboxApiResult(hdr)
+
+	assert.Empty(t, v)
+}
+
+func TestFiles_UnmarshalDropboxApiResultSet(t *testing.T) {
+	hdr := http.Header{
+		"Date":                   []string{"Wed, 13 Jan 2016 03:14:59 GMT"},
+		"Content-Length":         []string{"808"},
+		"Server":                 []string{"nginx"},
+		"Dropbox-Api-Result":     []string{`{"name": "Readme.md", "path_lower": "/readme.md", "id": "id:dxYX4OTicUAAAAAAAAATzA", "client_modified": "2001-01-01T00:00:00Z", "server_modified": "2016-01-13T21:42:37Z", "rev": "14a4406950f6", "size": 808}`},
+		"X-Server-Response-Time": []string{"740"},
+		"X-Dropbox-Request-Id":   []string{"2053baf502dc4d4d64f2201a12f0ce26"},
+		"X-Robots-Tag":           []string{"noindex", "nofollow", "noimageindex"},
+	}
+
+	v := UnmarshalDropboxApiResult(hdr)
+
+	assert.NotEmpty(t, v)
+	assert.Equal(t, "id:dxYX4OTicUAAAAAAAAATzA", v.ID)
 }
