@@ -29,16 +29,64 @@ const (
 	WriteModeOverwrite           = "overwrite"
 )
 
+// Dimensions specifies the dimensions of a photo or video.
+type Dimensions struct {
+	Width  uint64 `json:"width"`
+	Height uint64 `json:"height"`
+}
+
+// GPSCoordinates specifies the GPS coordinate of a photo or video.
+type GPSCoordinates struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+// PhotoMetadata specifies metadata for a photo.
+type PhotoMetadata struct {
+	Dimensions *Dimensions     `json:"dimensions,omitempty"`
+	Location   *GPSCoordinates `json:"location,omitempty"`
+	TimeTaken  time.Time       `json:"time_taken,omitempty"`
+}
+
+// VideoMetadata specifies metadata for a video.
+type VideoMetadata struct {
+	Dimensions *Dimensions     `json:"dimensions,omitempty"`
+	Location   *GPSCoordinates `json:"location,omitempty"`
+	TimeTaken  time.Time       `json:"time_taken,omitempty"`
+	Duration   uint64          `json:"duration,omitempty"`
+}
+
+// MediaMetadata provides metadata for a photo or video.
+type MediaMetadata struct {
+	Photo *PhotoMetadata `json:"photo,omitempty"`
+	Video *VideoMetadata `json:"video,omitempty"`
+}
+
+// MediaInfo provides additional information for a photo or video file.
+type MediaInfo struct {
+	Pending  bool           `json:"pending"`
+	Metadata *MediaMetadata `json:"metadata,omitempty"`
+}
+
+// FileSharingInfo for a file which is contained in a shared folder.
+type FileSharingInfo struct {
+	ReadOnly             bool   `json:"read_only"`
+	ParentSharedFolderID string `json:"parent_shared_folder_id"`
+	ModifiedBy           string `json:"modified_by,omitempty"`
+}
+
 // Metadata for a file or folder.
 type Metadata struct {
-	Tag            string    `json:".tag"`
-	Name           string    `json:"name"`
-	PathLower      string    `json:"path_lower"`
-	ClientModified time.Time `json:"client_modified"`
-	ServerModified time.Time `json:"server_modified"`
-	Rev            string    `json:"rev"`
-	Size           uint64    `json:"size"`
-	ID             string    `json:"id"`
+	Tag            string           `json:".tag"`
+	Name           string           `json:"name"`
+	PathLower      string           `json:"path_lower"`
+	ClientModified time.Time        `json:"client_modified"`
+	ServerModified time.Time        `json:"server_modified"`
+	Rev            string           `json:"rev"`
+	Size           uint64           `json:"size"`
+	ID             string           `json:"id"`
+	MediaInfo      *MediaInfo       `json:"media_info,omitempty"`
+	SharingInfo    *FileSharingInfo `json:"sharing_info,omitempty"`
 }
 
 // GetMetadataInput request input.
