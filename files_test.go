@@ -39,6 +39,7 @@ func TestFiles_Download(t *testing.T) {
 	fi, err := os.Lstat("Readme.md")
 	assert.NoError(t, err, "error getting local file info")
 	assert.Equal(t, fi.Size(), out.Length, "Readme.md length mismatch")
+	assert.NotEmpty(t, out.APIResult)
 
 	remote, err := ioutil.ReadAll(out.Body)
 	assert.NoError(t, err, "error reading remote")
@@ -156,6 +157,7 @@ func TestFiles_GetThumbnail(t *testing.T) {
 		0xff, 0xd8, // JPEG SOI marker
 		0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, // JFIF tag
 	}, buf, "should have jpeg header")
+	assert.NotEmpty(t, out.APIResult)
 }
 
 func TestFiles_GetPreview(t *testing.T) {
@@ -172,6 +174,7 @@ func TestFiles_GetPreview(t *testing.T) {
 	_, err = out.Body.Read(buf)
 	assert.NoError(t, err)
 	assert.Equal(t, []byte{0x25, 0x50, 0x44, 0x46}, buf, "should have pdf magic number")
+	assert.NotEmpty(t, out.APIResult)
 }
 
 func TestFiles_ListRevisions(t *testing.T) {
