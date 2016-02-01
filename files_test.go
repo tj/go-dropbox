@@ -194,7 +194,7 @@ func TestFiles_UnmarshalDropboxApiResultNotSet(t *testing.T) {
 		"X-Robots-Tag":           []string{"noindex", "nofollow", "noimageindex"},
 	}
 
-	v := UnmarshalDropboxApiResult(hdr)
+	v := unmarshalDropboxApiResult(hdr)
 
 	assert.Empty(t, v)
 }
@@ -210,7 +210,7 @@ func TestFiles_UnmarshalDropboxApiResultSet(t *testing.T) {
 		"X-Robots-Tag":           []string{"noindex", "nofollow", "noimageindex"},
 	}
 
-	v := UnmarshalDropboxApiResult(hdr)
+	v := unmarshalDropboxApiResult(hdr)
 
 	assert.NotEmpty(t, v)
 	assert.Equal(t, "id:dxYX4OTicUAAAAAAAAATzA", v.ID)

@@ -51,7 +51,7 @@ type GetMetadataInput struct {
 // GetMetadataOutput request output.
 type GetMetadataOutput struct {
 	Metadata
-	Header http.Header
+	RequestID string
 }
 
 // GetMetadata returns the metadata for a file or folder.
@@ -64,7 +64,7 @@ func (c *Files) GetMetadata(in *GetMetadataInput) (out *GetMetadataOutput, err e
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -79,7 +79,7 @@ type CreateFolderOutput struct {
 	Name      string `json:"name"`
 	PathLower string `json:"path_lower"`
 	ID        string `json:"id"`
-	Header    http.Header
+	RequestID string
 }
 
 // CreateFolder creates a folder.
@@ -92,7 +92,7 @@ func (c *Files) CreateFolder(in *CreateFolderInput) (out *CreateFolderOutput, er
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -105,7 +105,7 @@ type DeleteInput struct {
 // DeleteOutput request output.
 type DeleteOutput struct {
 	Metadata
-	Header http.Header
+	RequestID string
 }
 
 // Delete a file or folder and its contents.
@@ -118,7 +118,7 @@ func (c *Files) Delete(in *DeleteInput) (out *DeleteOutput, err error) {
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -148,7 +148,7 @@ type CopyInput struct {
 // CopyOutput request output.
 type CopyOutput struct {
 	Metadata
-	Header http.Header
+	RequestID string
 }
 
 // Copy a file or folder to a different location.
@@ -161,7 +161,7 @@ func (c *Files) Copy(in *CopyInput) (out *CopyOutput, err error) {
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -175,7 +175,7 @@ type MoveInput struct {
 // MoveOutput request output.
 type MoveOutput struct {
 	Metadata
-	Header http.Header
+	RequestID string
 }
 
 // Move a file or folder to a different location.
@@ -188,7 +188,7 @@ func (c *Files) Move(in *MoveInput) (out *MoveOutput, err error) {
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -202,7 +202,7 @@ type RestoreInput struct {
 // RestoreOutput request output.
 type RestoreOutput struct {
 	Metadata
-	Header http.Header
+	RequestID string
 }
 
 // Restore a file to a specific revision.
@@ -215,7 +215,7 @@ func (c *Files) Restore(in *RestoreInput) (out *RestoreOutput, err error) {
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -230,10 +230,10 @@ type ListFolderInput struct {
 
 // ListFolderOutput request output.
 type ListFolderOutput struct {
-	Cursor  string `json:"cursor"`
-	HasMore bool   `json:"has_more"`
-	Entries []*Metadata
-	Header  http.Header
+	Cursor    string `json:"cursor"`
+	HasMore   bool   `json:"has_more"`
+	Entries   []*Metadata
+	RequestID string
 }
 
 // ListFolder returns the metadata for a file or folder.
@@ -248,7 +248,7 @@ func (c *Files) ListFolder(in *ListFolderInput) (out *ListFolderOutput, err erro
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -268,7 +268,7 @@ func (c *Files) ListFolderContinue(in *ListFolderContinueInput) (out *ListFolder
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -312,10 +312,10 @@ type SearchInput struct {
 
 // SearchOutput request output.
 type SearchOutput struct {
-	Matches []*SearchMatch `json:"matches"`
-	More    bool           `json:"more"`
-	Start   uint64         `json:"start"`
-	Header  http.Header
+	Matches   []*SearchMatch `json:"matches"`
+	More      bool           `json:"more"`
+	Start     uint64         `json:"start"`
+	RequestID string
 }
 
 // Search for files and folders.
@@ -334,7 +334,7 @@ func (c *Files) Search(in *SearchInput) (out *SearchOutput, err error) {
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -352,7 +352,7 @@ type UploadInput struct {
 // UploadOutput request output.
 type UploadOutput struct {
 	Metadata
-	Header http.Header
+	RequestID string
 }
 
 // Upload a file smaller than 150MB.
@@ -365,7 +365,7 @@ func (c *Files) Upload(in *UploadInput) (out *UploadOutput, err error) {
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -377,9 +377,10 @@ type DownloadInput struct {
 
 // DownloadOutput request output.
 type DownloadOutput struct {
-	Body   io.ReadCloser
-	Length int64
-	Header http.Header
+	Body      io.ReadCloser
+	Length    int64
+	RequestID string
+	APIResult *Metadata
 }
 
 // Download a file.
@@ -389,7 +390,7 @@ func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
 		return
 	}
 
-	out = &DownloadOutput{body, l, hdr}
+	out = &DownloadOutput{body, l, hdr.Get("X-Dropbox-Request-Id"), unmarshalDropboxApiResult(hdr)}
 	return
 }
 
@@ -428,9 +429,10 @@ type GetThumbnailInput struct {
 
 // GetThumbnailOutput request output.
 type GetThumbnailOutput struct {
-	Body   io.ReadCloser
-	Length int64
-	Header http.Header
+	Body      io.ReadCloser
+	Length    int64
+	RequestID string
+	APIResult *Metadata
 }
 
 // GetThumbnail a thumbnail for a file. Currently thumbnails are only generated for the
@@ -441,7 +443,7 @@ func (c *Files) GetThumbnail(in *GetThumbnailInput) (out *GetThumbnailOutput, er
 		return
 	}
 
-	out = &GetThumbnailOutput{body, l, hdr}
+	out = &GetThumbnailOutput{body, l, hdr.Get("X-Dropbox-Request-Id"), unmarshalDropboxApiResult(hdr)}
 	return
 }
 
@@ -452,9 +454,10 @@ type GetPreviewInput struct {
 
 // GetPreviewOutput request output.
 type GetPreviewOutput struct {
-	Body   io.ReadCloser
-	Length int64
-	Header http.Header
+	Body      io.ReadCloser
+	Length    int64
+	RequestID string
+	APIResult *Metadata
 }
 
 // GetPreview a preview for a file. Currently previews are only generated for the
@@ -466,7 +469,7 @@ func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err erro
 		return
 	}
 
-	out = &GetPreviewOutput{body, l, hdr}
+	out = &GetPreviewOutput{body, l, hdr.Get("X-Dropbox-Request-Id"), unmarshalDropboxApiResult(hdr)}
 	return
 }
 
@@ -480,7 +483,7 @@ type ListRevisionsInput struct {
 type ListRevisionsOutput struct {
 	IsDeleted bool
 	Entries   []*Metadata
-	Header    http.Header
+	RequestID string
 }
 
 // ListRevisions gets the revisions of the specified file.
@@ -493,7 +496,7 @@ func (c *Files) ListRevisions(in *ListRevisionsInput) (out *ListRevisionsOutput,
 
 	err = json.NewDecoder(body).Decode(&out)
 	if err == nil {
-		out.Header = hdr
+		out.RequestID = hdr.Get("X-Dropbox-Request-Id")
 	}
 	return
 }
@@ -507,9 +510,9 @@ func normalizePath(s string) string {
 	}
 }
 
-// UnmarshalDropboxApiResult unmarshals the Dropbox-Api-Result header.
-func UnmarshalDropboxApiResult(header http.Header) *Metadata {
-	v := header.Get("Dropbox-Api-Result")
+// unmarshalDropboxApiResult unmarshals the Dropbox-Api-Result header.
+func unmarshalDropboxApiResult(hdr http.Header) *Metadata {
+	v := hdr.Get("Dropbox-Api-Result")
 	if v == "" {
 		return nil
 	}
