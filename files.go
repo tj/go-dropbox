@@ -80,6 +80,7 @@ type Metadata struct {
 	Tag            string           `json:".tag"`
 	Name           string           `json:"name"`
 	PathLower      string           `json:"path_lower"`
+	PathDisplay    string           `json:"path_display"`
 	ClientModified time.Time        `json:"client_modified"`
 	ServerModified time.Time        `json:"server_modified"`
 	Rev            string           `json:"rev"`
