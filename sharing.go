@@ -59,6 +59,146 @@ func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateShared
 	return
 }
 
+// ListSharedFolderMembersInput request input.
+type ListSharedFolderMembersInput struct {
+	SharedFolderID string         `json:"shared_folder_id"`
+	Actions        []MemberAction `json:"actions"`
+	Limit          uint64         `json:"limit"`
+}
+
+// ListSharedFolderMembersOutput enumerates shared folder user and group membership.
+type ListSharedFolderMembersOutput struct {
+	Users    []UserMembershipInfo    `json:"users"`
+	Groups   []GroupMembershipInfo   `json:"groups"`
+	Invitees []InviteeMembershipInfo `json:"invitees"`
+	Cursor   string                  `json:"cursor"`
+}
+
+// UserMembershipInfo is information about a user member of the shared folder.
+type UserMembershipInfo struct {
+	AccessType struct {
+		Tag AccessType `json:".tag"`
+	} `json:"access_type"`
+	User        UserInfo           `json:"user"`
+	Permissions []MemberPermission `json:"permissions,omitempty"`
+	Initials    string             `json:"initials,omitempty"`
+	IsInherited bool               `json:"is_inherited"`
+}
+
+// UserInfo is the account information for the membership user.
+type UserInfo struct {
+	AccountID    string `json:"account_id"`
+	SameTeam     bool   `json:"same_team"`
+	TeamMemberID string `json:"team_member_id"`
+}
+
+// MemberPermission indicates whether the user is allowed to take the action on the associated member.
+type MemberPermission struct {
+	Action MemberAction           `json:"action"`
+	Allow  bool                   `json:"allow"`
+	Reason PermissionDeniedReason `json:"reason,omitempty"`
+}
+
+// MemberAction indicates the action that the user may wish to take on the member.
+type MemberAction string
+
+// MemberAction possible values.
+const (
+	MemberActionMakeEditor MemberAction = "make_editor"
+	MemberActionMakeOwner               = "make_owner"
+	MemberActionMakeViewer              = "make_viewer"
+	MemberActionRemove                  = "remove"
+)
+
+// PermissionDeniedReason is the reason the user is denied a permission.
+type PermissionDeniedReason string
+
+// PermissionDeniedReason possible values
+const (
+	UserNotOnSameTeamAsOwner PermissionDeniedReason = "user_not_same_team_as_owner"
+	UserNotAllowedByOwner                           = "user_not_allowed_by_owner"
+	TargetIsIndirectmember                          = "target_is_indirect_member"
+	TargetIsOwner                                   = "target_is_owner"
+	TargetIsSelf                                    = "target_is_self"
+	TargetNotActive                                 = "target_not_active"
+)
+
+// GroupMembershipInfo is information about a group member of the shared folder.
+type GroupMembershipInfo struct {
+	AccessType struct {
+		Tag AccessType `json:".tag"`
+	} `json:"access_type"`
+	Group       GroupInfo          `json:"group"`
+	Permissions []MemberPermission `json:"permissions,omitempty"`
+	Initials    *string            `json:"initials,omitempty"`
+	IsInherited bool               `json:"is_inherited"`
+}
+
+// GroupInfo defines information about the membership group.
+type GroupInfo struct {
+	GroupName       string    `json:"group_name"`
+	GroupID         string    `json:"group_id"`
+	GroupType       GroupType `json:"group_type"`
+	IsOwner         bool      `json:"is_owner"`
+	SameTeam        bool      `json:"same_team"`
+	GroupExternalID string    `json:"group_external_id,omitempty"`
+	MemberCount     *uint32   `json:"member_count,omitempty"`
+}
+
+// GroupType determines how a group is created and managed.
+type GroupType string
+
+// GroupType possible values.
+const (
+	GroupTypeTeam        GroupType = "team"
+	GroupTypeUserManaged           = "user_managed"
+)
+
+// InviteeMembershipInfo is information about an invited member of a shared folder.
+type InviteeMembershipInfo struct {
+	AccessType struct {
+		Tag AccessType `json:".tag"`
+	} `json:"access_type"`
+	Invitee     InviteeInfo        `json:"invitee"`
+	Permissions []MemberPermission `json:"permissions,omitempty"`
+	Initials    *string            `json:"initials,omitempty"`
+	IsInherited bool               `json:"is_inherited"`
+}
+
+// InviteeInfo contains information about the recipient of a shared folder invitation.
+type InviteeInfo struct {
+	Email string `json:"email"`
+}
+
+// ListSharedFolderMembers returns shared folder membership by its folder ID.
+func (c *Sharing) ListSharedFolderMembers(in *ListSharedFolderMembersInput) (out *ListSharedFolderMembersOutput, err error) {
+	body, err := c.call("/sharing/list_folder_members", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
+// ListSharedFolderMembersInputContinue is the input for continuing listing folder members.
+type ListSharedFolderMembersInputContinue struct {
+	Cursor string `json:"cursor"`
+}
+
+// ListSharedFolderMembersContinue returns shared folder membership by its folder ID.
+func (c *Sharing) ListSharedFolderMembersContinue(in *ListSharedFolderMembersInputContinue) (out *ListSharedFolderMembersOutput, err error) {
+	body, err := c.call("/sharing/list_folder_members/continue", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
 // ListSharedFolderInput request input.
 type ListSharedFolderInput struct {
 	Limit   uint64         `json:"limit"`
