@@ -62,9 +62,10 @@ func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateShared
 // ListSharedFolderInput request input.
 type ListSharedFolderInput struct {
 	Limit   uint64         `json:"limit"`
-	Actions []FolderAction `json:"actions"`
+	Actions []FolderAction `json:"actions,omitempty"`
 }
 
+// FolderAction defines actions that may be taken on shared folders.
 type FolderAction struct {
 	ChangeOptions string
 }
@@ -75,9 +76,40 @@ type ListSharedFolderOutput struct {
 	Cursor  string                 `json:"cursor"`
 }
 
+// ListSharedFolders returns the list of all shared folders the current user has access to.
+func (c *Sharing) ListSharedFolders(in *ListSharedFolderInput) (out *ListSharedFolderOutput, err error) {
+	body, err := c.call("/sharing/list_folders", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
+// ListSharedFolderContinueInput request input.
+type ListSharedFolderContinueInput struct {
+	Cursor string `json:"cursor"`
+}
+
+// ListSharedFoldersContinue returns the list of all shared folders the current user has access to.
+func (c *Sharing) ListSharedFoldersContinue(in *ListSharedFolderContinueInput) (out *ListSharedFolderOutput, err error) {
+	body, err := c.call("/sharing/list_folders/continue", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
 // SharedFolderMetadata includes basic information about the shared folder.
 type SharedFolderMetadata struct {
-	AccessType     AccessType   `json:"access_type"`
+	AccessType struct {
+		Tag AccessType `json:".tag"`
+	} `json:"access_type"`
 	IsTeamFolder   bool         `json:"is_team_folder"`
 	Policy         FolderPolicy `json:"policy"`
 	Name           string       `json:"name"`
@@ -87,9 +119,9 @@ type SharedFolderMetadata struct {
 		ID   string `json:"id"`
 		Name string `json:"name"`
 	} `json:"owner_team"`
-	ParentSharedFolderID string `json:"parent_shared_folder_id"`
-	PathLower            string `json:"path_lower"`
-	Permissions          string `json:"permissions"`
+	ParentSharedFolderID string   `json:"parent_shared_folder_id"`
+	PathLower            string   `json:"path_lower"`
+	Permissions          []string `json:"permissions"`
 }
 
 // FolderPolicy enumerates the policies governing this shared folder.
