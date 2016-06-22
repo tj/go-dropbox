@@ -136,13 +136,15 @@ type GroupMembershipInfo struct {
 
 // GroupInfo defines information about the membership group.
 type GroupInfo struct {
-	GroupName       string    `json:"group_name"`
-	GroupID         string    `json:"group_id"`
-	GroupType       GroupType `json:"group_type"`
-	IsOwner         bool      `json:"is_owner"`
-	SameTeam        bool      `json:"same_team"`
-	GroupExternalID string    `json:"group_external_id,omitempty"`
-	MemberCount     *uint32   `json:"member_count,omitempty"`
+	GroupName string `json:"group_name"`
+	GroupID   string `json:"group_id"`
+	GroupType struct {
+		Tag GroupType `json:".tag"`
+	} `json:"group_type"`
+	IsOwner         bool    `json:"is_owner"`
+	SameTeam        bool    `json:"same_team"`
+	GroupExternalID string  `json:"group_external_id,omitempty"`
+	MemberCount     *uint32 `json:"member_count,omitempty"`
 }
 
 // GroupType determines how a group is created and managed.
