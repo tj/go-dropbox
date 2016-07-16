@@ -166,7 +166,7 @@ type PermanentlyDeleteInput struct {
 
 // PermanentlyDelete a file or folder and its contents.
 func (c *Files) PermanentlyDelete(in *PermanentlyDeleteInput) (err error) {
-	body, err := c.call("/files/delete", in)
+	body, err := c.call("/files/permanently_delete", in)
 	if err != nil {
 		return
 	}
@@ -369,13 +369,136 @@ type UploadOutput struct {
 
 // Upload a file smaller than 150MB.
 func (c *Files) Upload(in *UploadInput) (out *UploadOutput, err error) {
-	body, _, err := c.download("/files/upload", in, in.Reader)
-	if err != nil {
-		return
-	}
-	defer body.Close()
+	err = c.decodeContent("/files/upload", in, in.Reader, out)
+	return
+}
 
-	err = json.NewDecoder(body).Decode(&out)
+const defaultChunkSize = 125e6
+
+// UploadSessionCursor
+type UploadSessionCursor struct {
+	ID     string `json:"session_id"`
+	Offset int64  `json:"offset"`
+}
+
+// UploadSessionInput request input.
+type UploadSessionInput struct {
+	//If Size is provided, it will be used to prevent a superfluous request.
+	//Otherwise, it will check whether Commit.Reader has a Size() int64 method.
+	Size int64
+	//ChunkSize is the number of bytes to upload in each call to append (defaults to 125MB).
+	ChunkSize int64
+	//Commit information for uploaded file
+	Commit UploadInput
+}
+
+// UploadSessionOutput request output.
+type UploadSessionOutput struct {
+	UploadOutput
+}
+
+// Upload a file larger than 150MB using an internally managed upload session.
+// The input reader will be split into 125MB chunks. Makes use of
+// UploadSessionStart/Append/Finish.
+func (c *Files) UploadSession(in *UploadSessionInput) (out *UploadSessionOutput, err error) {
+	//copy commit so it cannot be modified mid-transfer
+	commit := in.Commit
+	//find size and chunk size
+	size := in.Size
+	if s, ok := commit.Reader.(interface {
+		Size() int64
+	}); ok && size == 0 {
+		size = s.Size()
+	}
+	chunkSize := in.ChunkSize
+	if chunkSize == 0 {
+		chunkSize = defaultChunkSize
+	} else if chunkSize > 150e6 {
+		chunkSize = 150e6 //cap at 150MB
+	}
+	//prepare chunk-sized-reader
+	lr := &io.LimitedReader{R: commit.Reader, N: chunkSize}
+	//start
+	start, err := c.UploadSessionStart(&UploadSessionStartInput{Reader: lr})
+	if err != nil {
+		return nil, err
+	}
+	//initialise cursor with id and offset
+	curs := start.UploadSessionCursor
+	curs.Offset = chunkSize - lr.N
+	//while the limited reader has reached its limit
+	for lr.N == 0 {
+		//reset
+		lr.N = chunkSize
+		//upload more
+		if err = c.UploadSessionAppend(&UploadSessionAppendInput{
+			Cursor: curs,
+			Reader: lr,
+		}); err != nil {
+			return nil, err
+		}
+		curs.Offset += chunkSize - lr.N
+		//final chunk? save one call to append
+		if size > 0 && curs.Offset+chunkSize > size {
+			break
+		}
+	}
+	//finish (commit.Reader will either have 0 or less than chunkSize bytes remaining)
+	fin, err := c.UploadSessionFinish(&UploadSessionFinishInput{
+		Cursor: curs,
+		Commit: commit,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &UploadSessionOutput{fin.UploadOutput}, nil
+}
+
+// UploadSessionStartInput request input.
+type UploadSessionStartInput struct {
+	Close  bool      `json:"close"`
+	Reader io.Reader `json:"-"`
+}
+
+// UploadSessionStartOutput request output.
+type UploadSessionStartOutput struct {
+	UploadSessionCursor
+}
+
+// New upload session exposing the /files/upload_session API semantics.
+func (c *Files) UploadSessionStart(in *UploadSessionStartInput) (out *UploadSessionStartOutput, err error) {
+	err = c.decodeContent("/files/upload_session/start", in, in.Reader, &out)
+	return
+}
+
+// UploadSessionAppendInput request input.
+type UploadSessionAppendInput struct {
+	Cursor UploadSessionCursor `json:"cursor"`
+	Close  bool                `json:"close"`
+	Reader io.Reader           `json:"-"`
+}
+
+// Append a chunk to the current session (smaller than 150MB).
+func (c *Files) UploadSessionAppend(in *UploadSessionAppendInput) (err error) {
+	body, _, err := c.content("/files/upload_session/append_v2", in, in.Reader)
+	body.Close()
+	return
+}
+
+// UploadSessionFinishInput request input.
+type UploadSessionFinishInput struct {
+	Cursor UploadSessionCursor `json:"cursor"`
+	Commit UploadInput         `json:"commit"`
+}
+
+// UploadSessionFinishInput request output.
+type UploadSessionFinishOutput struct {
+	UploadOutput
+}
+
+// Finish an upload session and provide the file commit information.
+func (c *Files) UploadSessionFinish(in *UploadSessionFinishInput) (out *UploadSessionFinishOutput, err error) {
+	err = c.decodeContent("/files/upload_session/finish", in, in.Commit.Reader, &out)
 	return
 }
 
@@ -392,7 +515,7 @@ type DownloadOutput struct {
 
 // Download a file.
 func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
-	body, l, err := c.download("/files/download", in, nil)
+	body, l, err := c.content("/files/download", in, nil)
 	if err != nil {
 		return
 	}
@@ -443,7 +566,7 @@ type GetThumbnailOutput struct {
 // GetThumbnail a thumbnail for a file. Currently thumbnails are only generated for the
 // files with the following extensions: png, jpeg, png, tiff, tif, gif and bmp.
 func (c *Files) GetThumbnail(in *GetThumbnailInput) (out *GetThumbnailOutput, err error) {
-	body, l, err := c.download("/files/get_thumbnail", in, nil)
+	body, l, err := c.content("/files/get_thumbnail", in, nil)
 	if err != nil {
 		return
 	}
@@ -467,7 +590,7 @@ type GetPreviewOutput struct {
 // files with the following extensions: .doc, .docx, .docm, .ppt, .pps, .ppsx,
 // .ppsm, .pptx, .pptm, .xls, .xlsx, .xlsm, .rtf
 func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err error) {
-	body, l, err := c.download("/files/get_preview", in, nil)
+	body, l, err := c.content("/files/get_preview", in, nil)
 	if err != nil {
 		return
 	}
