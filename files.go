@@ -369,7 +369,7 @@ type UploadOutput struct {
 
 // Upload a file smaller than 150MB.
 func (c *Files) Upload(in *UploadInput) (out *UploadOutput, err error) {
-	err = c.decodeContent("/files/upload", in, in.Reader, out)
+	err = c.decodeContent("/files/upload", in, in.Reader, &out)
 	return
 }
 
