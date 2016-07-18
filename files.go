@@ -373,85 +373,10 @@ func (c *Files) Upload(in *UploadInput) (out *UploadOutput, err error) {
 	return
 }
 
-const defaultChunkSize = 125e6
-
 // UploadSessionCursor
 type UploadSessionCursor struct {
 	ID     string `json:"session_id"`
 	Offset int64  `json:"offset"`
-}
-
-// UploadSessionInput request input.
-type UploadSessionInput struct {
-	//If Size is provided, it will be used to prevent a superfluous request.
-	//Otherwise, it will check whether Commit.Reader has a Size() int64 method.
-	Size int64
-	//ChunkSize is the number of bytes to upload in each call to append (defaults to 125MB).
-	ChunkSize int64
-	//Commit information for uploaded file
-	Commit UploadInput
-}
-
-// UploadSessionOutput request output.
-type UploadSessionOutput struct {
-	UploadOutput
-}
-
-// Upload a file larger than 150MB using an internally managed upload session.
-// The input reader will be split into 125MB chunks. Makes use of
-// UploadSessionStart/Append/Finish.
-func (c *Files) UploadSession(in *UploadSessionInput) (out *UploadSessionOutput, err error) {
-	//copy commit so it cannot be modified mid-transfer
-	commit := in.Commit
-	//find size and chunk size
-	size := in.Size
-	if s, ok := commit.Reader.(interface {
-		Size() int64
-	}); ok && size == 0 {
-		size = s.Size()
-	}
-	chunkSize := in.ChunkSize
-	if chunkSize == 0 {
-		chunkSize = defaultChunkSize
-	} else if chunkSize > 150e6 {
-		chunkSize = 150e6 //cap at 150MB
-	}
-	//prepare chunk-sized-reader
-	lr := &io.LimitedReader{R: commit.Reader, N: chunkSize}
-	//start
-	start, err := c.UploadSessionStart(&UploadSessionStartInput{Reader: lr})
-	if err != nil {
-		return nil, err
-	}
-	//initialise cursor with id and offset
-	curs := start.UploadSessionCursor
-	curs.Offset = chunkSize - lr.N
-	//while the limited reader has reached its limit
-	for lr.N == 0 {
-		//reset
-		lr.N = chunkSize
-		//upload more
-		if err = c.UploadSessionAppend(&UploadSessionAppendInput{
-			Cursor: curs,
-			Reader: lr,
-		}); err != nil {
-			return nil, err
-		}
-		curs.Offset += chunkSize - lr.N
-		//final chunk? save one call to append
-		if size > 0 && curs.Offset+chunkSize > size {
-			break
-		}
-	}
-	//finish (commit.Reader will either have 0 or less than chunkSize bytes remaining)
-	fin, err := c.UploadSessionFinish(&UploadSessionFinishInput{
-		Cursor: curs,
-		Commit: commit,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &UploadSessionOutput{fin.UploadOutput}, nil
 }
 
 // UploadSessionStartInput request input.

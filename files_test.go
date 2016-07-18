@@ -2,7 +2,6 @@ package dropbox
 
 import (
 	"bytes"
-	"crypto/rand"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -182,30 +181,4 @@ func TestFiles_ListRevisions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, out.Entries)
 	assert.False(t, out.IsDeleted)
-}
-
-func TestFiles_UploadSession(t *testing.T) {
-	c := client()
-	//880KB file
-	size := int64(880e3)
-	b := make([]byte, int(size))
-	_, err := rand.Read(b)
-	if err != nil {
-		t.Fatal("crypto fail")
-	}
-	noise := bytes.NewBuffer(b)
-	//upload in 200KB chunks
-	meta, err := c.Files.UploadSession(&UploadSessionInput{
-		Size:      size,
-		ChunkSize: 200e3,
-		Commit: UploadInput{
-			Mute:   true,
-			Mode:   WriteModeOverwrite,
-			Path:   "/noise.txt",
-			Reader: noise,
-		},
-	})
-
-	assert.NoError(t, err, "error session uploading file")
-	assert.Equal(t, meta.Size, size, "should be the correct size")
 }
