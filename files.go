@@ -166,7 +166,7 @@ type PermanentlyDeleteInput struct {
 
 // PermanentlyDelete a file or folder and its contents.
 func (c *Files) PermanentlyDelete(in *PermanentlyDeleteInput) (err error) {
-	body, err := c.call("/files/delete", in)
+	body, err := c.call("/files/permanently_delete", in)
 	if err != nil {
 		return
 	}
@@ -369,13 +369,61 @@ type UploadOutput struct {
 
 // Upload a file smaller than 150MB.
 func (c *Files) Upload(in *UploadInput) (out *UploadOutput, err error) {
-	body, _, err := c.download("/files/upload", in, in.Reader)
-	if err != nil {
-		return
-	}
-	defer body.Close()
+	err = c.decodeContent("/files/upload", in, in.Reader, &out)
+	return
+}
 
-	err = json.NewDecoder(body).Decode(&out)
+// UploadSessionCursor
+type UploadSessionCursor struct {
+	ID     string `json:"session_id"`
+	Offset int64  `json:"offset"`
+}
+
+// UploadSessionStartInput request input.
+type UploadSessionStartInput struct {
+	Close  bool      `json:"close"`
+	Reader io.Reader `json:"-"`
+}
+
+// UploadSessionStartOutput request output.
+type UploadSessionStartOutput struct {
+	UploadSessionCursor
+}
+
+// New upload session exposing the /files/upload_session API semantics.
+func (c *Files) UploadSessionStart(in *UploadSessionStartInput) (out *UploadSessionStartOutput, err error) {
+	err = c.decodeContent("/files/upload_session/start", in, in.Reader, &out)
+	return
+}
+
+// UploadSessionAppendInput request input.
+type UploadSessionAppendInput struct {
+	Cursor UploadSessionCursor `json:"cursor"`
+	Close  bool                `json:"close"`
+	Reader io.Reader           `json:"-"`
+}
+
+// Append a chunk to the current session (smaller than 150MB).
+func (c *Files) UploadSessionAppend(in *UploadSessionAppendInput) (err error) {
+	body, _, err := c.content("/files/upload_session/append_v2", in, in.Reader)
+	body.Close()
+	return
+}
+
+// UploadSessionFinishInput request input.
+type UploadSessionFinishInput struct {
+	Cursor UploadSessionCursor `json:"cursor"`
+	Commit UploadInput         `json:"commit"`
+}
+
+// UploadSessionFinishInput request output.
+type UploadSessionFinishOutput struct {
+	UploadOutput
+}
+
+// Finish an upload session and provide the file commit information.
+func (c *Files) UploadSessionFinish(in *UploadSessionFinishInput) (out *UploadSessionFinishOutput, err error) {
+	err = c.decodeContent("/files/upload_session/finish", in, in.Commit.Reader, &out)
 	return
 }
 
@@ -392,7 +440,7 @@ type DownloadOutput struct {
 
 // Download a file.
 func (c *Files) Download(in *DownloadInput) (out *DownloadOutput, err error) {
-	body, l, err := c.download("/files/download", in, nil)
+	body, l, err := c.content("/files/download", in, nil)
 	if err != nil {
 		return
 	}
@@ -443,7 +491,7 @@ type GetThumbnailOutput struct {
 // GetThumbnail a thumbnail for a file. Currently thumbnails are only generated for the
 // files with the following extensions: png, jpeg, png, tiff, tif, gif and bmp.
 func (c *Files) GetThumbnail(in *GetThumbnailInput) (out *GetThumbnailOutput, err error) {
-	body, l, err := c.download("/files/get_thumbnail", in, nil)
+	body, l, err := c.content("/files/get_thumbnail", in, nil)
 	if err != nil {
 		return
 	}
@@ -467,7 +515,7 @@ type GetPreviewOutput struct {
 // files with the following extensions: .doc, .docx, .docm, .ppt, .pps, .ppsx,
 // .ppsm, .pptx, .pptm, .xls, .xlsx, .xlsm, .rtf
 func (c *Files) GetPreview(in *GetPreviewInput) (out *GetPreviewOutput, err error) {
-	body, l, err := c.download("/files/get_preview", in, nil)
+	body, l, err := c.content("/files/get_preview", in, nil)
 	if err != nil {
 		return
 	}

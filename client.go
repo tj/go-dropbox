@@ -47,8 +47,8 @@ func (c *Client) call(path string, in interface{}) (io.ReadCloser, error) {
 	return r, err
 }
 
-// download style endpoint.
-func (c *Client) download(path string, in interface{}, r io.Reader) (io.ReadCloser, int64, error) {
+// content download/upload style endpoint.
+func (c *Client) content(path string, in interface{}, r io.Reader) (io.ReadCloser, int64, error) {
 	url := "https://content.dropboxapi.com/2" + path
 
 	body, err := json.Marshal(in)
@@ -68,6 +68,17 @@ func (c *Client) download(path string, in interface{}, r io.Reader) (io.ReadClos
 	}
 
 	return c.do(req)
+}
+
+// content download/upload style endpoint with response body JSON decoding.
+func (c *Client) decodeContent(path string, in interface{}, r io.Reader, out interface{}) (err error) {
+	body, _, err := c.content(path, in, r)
+	if err != nil {
+		return
+	}
+	err = json.NewDecoder(body).Decode(out)
+	body.Close()
+	return
 }
 
 // perform the request.

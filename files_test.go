@@ -2,6 +2,7 @@ package dropbox
 
 import (
 	"bytes"
+	"crypto/rand"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -181,4 +182,55 @@ func TestFiles_ListRevisions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, out.Entries)
 	assert.False(t, out.IsDeleted)
+}
+
+func TestFiles_UploadStartAppendFinish(t *testing.T) {
+	c := client()
+	//680KB "file" in 200KB chunks
+	size := int64(680e3)
+	b := make([]byte, int(size))
+	_, err := rand.Read(b)
+	if err != nil {
+		t.Fatal("crypto fail")
+	}
+	//start
+	start, err := c.Files.UploadSessionStart(&UploadSessionStartInput{
+		Reader: bytes.NewReader(b[:200]),
+	})
+	if err != nil {
+		t.Errorf("error upload session start: %s", err)
+		return
+	}
+	//initialise cursor with id and offset
+	cursID := start.UploadSessionCursor.ID
+	//append twice
+	if err = c.Files.UploadSessionAppend(&UploadSessionAppendInput{
+		Cursor: UploadSessionCursor{ID: cursID, Offset: 200},
+		Reader: bytes.NewReader(b[200:400]),
+	}); err != nil {
+		t.Errorf("error upload session append 1: %s", err)
+		return
+	}
+	if err = c.Files.UploadSessionAppend(&UploadSessionAppendInput{
+		Cursor: UploadSessionCursor{ID: cursID, Offset: 400},
+		Reader: bytes.NewReader(b[400:600]),
+	}); err != nil {
+		t.Errorf("error upload session append 2: %s", err)
+		return
+	}
+	//finish
+	fin, err := c.Files.UploadSessionFinish(&UploadSessionFinishInput{
+		Cursor: UploadSessionCursor{ID: cursID, Offset: 600},
+		Commit: UploadInput{
+			Path:   "/more-noise.txt",
+			Mode:   WriteModeOverwrite,
+			Mute:   true,
+			Reader: bytes.NewReader(b[600:]),
+		},
+	})
+	if err != nil {
+		t.Errorf("error upload session finish: %s", err)
+		return
+	}
+	assert.Equal(t, int64(fin.Size), size, "should be the correct size")
 }
