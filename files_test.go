@@ -3,6 +3,7 @@ package dropbox
 import (
 	"bytes"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
 
@@ -38,6 +39,7 @@ func TestFiles_Download(t *testing.T) {
 	fi, err := os.Lstat("Readme.md")
 	assert.NoError(t, err, "error getting local file info")
 	assert.Equal(t, fi.Size(), out.Length, "Readme.md length mismatch")
+	assert.NotEmpty(t, out.APIResult)
 
 	remote, err := ioutil.ReadAll(out.Body)
 	assert.NoError(t, err, "error reading remote")
@@ -155,6 +157,7 @@ func TestFiles_GetThumbnail(t *testing.T) {
 		0xff, 0xd8, // JPEG SOI marker
 		0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, // JFIF tag
 	}, buf, "should have jpeg header")
+	assert.NotEmpty(t, out.APIResult)
 }
 
 func TestFiles_GetPreview(t *testing.T) {
@@ -171,6 +174,7 @@ func TestFiles_GetPreview(t *testing.T) {
 	_, err = out.Body.Read(buf)
 	assert.NoError(t, err)
 	assert.Equal(t, []byte{0x25, 0x50, 0x44, 0x46}, buf, "should have pdf magic number")
+	assert.NotEmpty(t, out.APIResult)
 }
 
 func TestFiles_ListRevisions(t *testing.T) {
@@ -181,4 +185,36 @@ func TestFiles_ListRevisions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, out.Entries)
 	assert.False(t, out.IsDeleted)
+}
+
+func TestFiles_UnmarshalDropboxApiResultNotSet(t *testing.T) {
+	hdr := http.Header{
+		"Date":                   []string{"Wed, 13 Jan 2016 03:14:59 GMT"},
+		"Content-Length":         []string{"808"},
+		"Server":                 []string{"nginx"},
+		"X-Server-Response-Time": []string{"740"},
+		"X-Dropbox-Request-Id":   []string{"2053baf502dc4d4d64f2201a12f0ce26"},
+		"X-Robots-Tag":           []string{"noindex", "nofollow", "noimageindex"},
+	}
+
+	v := unmarshalDropboxApiResult(hdr)
+
+	assert.Empty(t, v)
+}
+
+func TestFiles_UnmarshalDropboxApiResultSet(t *testing.T) {
+	hdr := http.Header{
+		"Date":                   []string{"Wed, 13 Jan 2016 03:14:59 GMT"},
+		"Content-Length":         []string{"808"},
+		"Server":                 []string{"nginx"},
+		"Dropbox-Api-Result":     []string{`{"name": "Readme.md", "path_lower": "/readme.md", "id": "id:dxYX4OTicUAAAAAAAAATzA", "client_modified": "2001-01-01T00:00:00Z", "server_modified": "2016-01-13T21:42:37Z", "rev": "14a4406950f6", "size": 808}`},
+		"X-Server-Response-Time": []string{"740"},
+		"X-Dropbox-Request-Id":   []string{"2053baf502dc4d4d64f2201a12f0ce26"},
+		"X-Robots-Tag":           []string{"noindex", "nofollow", "noimageindex"},
+	}
+
+	v := unmarshalDropboxApiResult(hdr)
+
+	assert.NotEmpty(t, v)
+	assert.Equal(t, "id:dxYX4OTicUAAAAAAAAATzA", v.ID)
 }
