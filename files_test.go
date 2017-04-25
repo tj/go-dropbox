@@ -5,8 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/ungerik/go-dry"
 )
 
 func TestFiles_Upload(t *testing.T) {
@@ -181,4 +183,14 @@ func TestFiles_ListRevisions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, out.Entries)
 	assert.False(t, out.IsDeleted)
+}
+
+func TestFiles_ContentHash(t *testing.T) {
+	data, err := dry.FileGetBytes("https://www.dropbox.com/static/images/developers/milky-way-nasa.jpg", time.Second*5)
+	assert.NoError(t, err)
+
+	hash, err := ContentHash(bytes.NewBuffer(data))
+	assert.NoError(t, err)
+
+	assert.Equal(t, "485291fa0ee50c016982abbfa943957bcd231aae0492ccbaa22c58e3997b35e0", hash)
 }

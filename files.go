@@ -1,8 +1,11 @@
 package dropbox
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io"
+	"os"
 	"time"
 )
 
@@ -88,6 +91,7 @@ type Metadata struct {
 	ID             string           `json:"id"`
 	MediaInfo      *MediaInfo       `json:"media_info,omitempty"`
 	SharingInfo    *FileSharingInfo `json:"sharing_info,omitempty"`
+	ContentHash    string           `json:"content_hash,omitempty"`
 }
 
 // GetMetadataInput request input.
@@ -411,7 +415,7 @@ const (
 	GetThumbnailFormatPNG = "png"
 )
 
-// ThumbnailFormat determines the size of the thumbnail.
+// ThumbnailSize determines the size of the thumbnail.
 type ThumbnailSize string
 
 const (
@@ -504,7 +508,45 @@ func (c *Files) ListRevisions(in *ListRevisionsInput) (out *ListRevisionsOutput,
 func normalizePath(s string) string {
 	if s == "/" {
 		return ""
-	} else {
-		return s
 	}
+	return s
+}
+
+const hashBlockSize = 4 * 1024 * 1024
+
+// ContentHash returns the Dropbox content_hash for a io.Reader.
+// See https://www.dropbox.com/developers/reference/content-hash
+func ContentHash(r io.Reader) (string, error) {
+	buf := make([]byte, hashBlockSize)
+	resultHash := sha256.New()
+	n, err := r.Read(buf)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+	if n > 0 {
+		bufHash := sha256.Sum256(buf[:n])
+		resultHash.Write(bufHash[:])
+	}
+	for n == hashBlockSize && err == nil {
+		n, err = r.Read(buf)
+		if err != nil && err != io.EOF {
+			return "", err
+		}
+		if n > 0 {
+			bufHash := sha256.Sum256(buf[:n])
+			resultHash.Write(bufHash[:])
+		}
+	}
+	return fmt.Sprintf("%x", resultHash.Sum(nil)), nil
+}
+
+// FileContentHash returns the Dropbox content_hash for a local file.
+// See https://www.dropbox.com/developers/reference/content-hash
+func FileContentHash(filename string) (string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	return ContentHash(f)
 }
