@@ -94,9 +94,8 @@ func (c *Client) do(req *http.Request) (io.ReadCloser, int64, error) {
 		if b, err := ioutil.ReadAll(res.Body); err == nil {
 			e.Summary = string(b)
 			return nil, 0, e
-		} else {
-			return nil, 0, err
 		}
+		return nil, 0, err
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(e); err != nil {
