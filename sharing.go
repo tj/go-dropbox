@@ -47,7 +47,7 @@ const (
 	SharedFolderOnly                = "shared_folder_only"
 )
 
-//CreateSharedLink creates a shared link for a file or folder
+//CreateSharedLink returns a shared link.
 func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateSharedLinkOutput, err error) {
 	body, err := c.call("/sharing/create_shared_link_with_settings", in)
 	if err != nil {
