@@ -47,7 +47,7 @@ const (
 	SharedFolderOnly                = "shared_folder_only"
 )
 
-//CreateSharedLink creates a shared link for a file or folder
+// CreateSharedLink returns a shared link for a file or folder
 func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateSharedLinkOutput, err error) {
 	body, err := c.call("/sharing/create_shared_link_with_settings", in)
 	if err != nil {
@@ -59,17 +59,27 @@ func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateShared
 	return
 }
 
-//ListShareLinksInput request input.
+// ListShareLinksInput request input.
 type ListShareLinksInput struct {
 	Path string `json:"path"`
 }
 
-//ListShareLinksOutput request output.
-type ListShareLinksOutput struct {
-	Links []CreateSharedLinkOutput `json:"links"`
+// SharedLinkOutput request output.
+type SharedLinkOutput struct {
+	URL             string `json:"url"`
+	Path            string `json:"path"`
+	VisibilityModel struct {
+		Tag VisibilityType `json:".tag"`
+	} `json:"visibility"`
+	Expires time.Time `json:"expires,omitempty"`
 }
 
-//ListSharedLinks gets shared links of the path
+// ListShareLinksOutput request output.
+type ListShareLinksOutput struct {
+	Links []SharedLinkOutput `json:"links"`
+}
+
+// ListSharedLinks gets shared links of input.
 func (c *Sharing) ListSharedLinks(in *ListShareLinksInput) (out *ListShareLinksOutput, err error) {
 	endpoint := "/sharing/list_shared_links"
 	body, err := c.call(endpoint, in)
