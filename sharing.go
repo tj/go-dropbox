@@ -21,8 +21,7 @@ func NewSharing(config *Config) *Sharing {
 
 // CreateSharedLinkInput request input.
 type CreateSharedLinkInput struct {
-	Path     string `json:"path"`
-	ShortURL bool   `json:"short_url"`
+	Path string `json:"path"`
 }
 
 // CreateSharedLinkOutput request output.
