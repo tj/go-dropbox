@@ -47,9 +47,32 @@ const (
 	SharedFolderOnly                = "shared_folder_only"
 )
 
-// CreateSharedLink returns a shared link.
+//CreateSharedLink creates a shared link for a file or folder
 func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateSharedLinkOutput, err error) {
-	body, err := c.call("/sharing/create_shared_link", in)
+	body, err := c.call("/sharing/create_shared_link_with_settings", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
+//ListShareLinksInput request input.
+type ListShareLinksInput struct {
+	Path string `json:"path"`
+}
+
+//ListShareLinksOutput request output.
+type ListShareLinksOutput struct {
+	Links []CreateSharedLinkOutput `json:"links"`
+}
+
+//ListSharedLinks gets shared links of the path
+func (c *Sharing) ListSharedLinks(in *ListShareLinksInput) (out *ListShareLinksOutput, err error) {
+	endpoint := "/sharing/list_shared_links"
+	body, err := c.call(endpoint, in)
 	if err != nil {
 		return
 	}
