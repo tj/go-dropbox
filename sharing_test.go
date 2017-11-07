@@ -9,8 +9,7 @@ import (
 func TestSharing_CreateSharedLink(t *testing.T) {
 	c := client()
 	out, err := c.Sharing.CreateSharedLink(&CreateSharedLinkInput{
-		Path:     "/hello.txt",
-		ShortURL: true,
+		Path: "/hello.txt",
 	})
 
 	assert.NoError(t, err, "error sharing file")

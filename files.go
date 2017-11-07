@@ -362,7 +362,7 @@ type UploadInput struct {
 	Mode           WriteMode `json:"mode"`
 	AutoRename     bool      `json:"autorename"`
 	Mute           bool      `json:"mute"`
-	ClientModified time.Time `json:"client_modified,omitempty"`
+	ClientModified string    `json:"client_modified,omitempty"`
 	Reader         io.Reader `json:"-"`
 }
 

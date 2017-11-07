@@ -21,8 +21,7 @@ func NewSharing(config *Config) *Sharing {
 
 // CreateSharedLinkInput request input.
 type CreateSharedLinkInput struct {
-	Path     string `json:"path"`
-	ShortURL bool   `json:"short_url"`
+	Path string `json:"path"`
 }
 
 // CreateSharedLinkOutput request output.
@@ -49,7 +48,40 @@ const (
 
 // CreateSharedLink returns a shared link.
 func (c *Sharing) CreateSharedLink(in *CreateSharedLinkInput) (out *CreateSharedLinkOutput, err error) {
-	body, err := c.call("/sharing/create_shared_link", in)
+	body, err := c.call("/sharing/create_shared_link_with_settings", in)
+	if err != nil {
+		return
+	}
+	defer body.Close()
+
+	err = json.NewDecoder(body).Decode(&out)
+	return
+}
+
+// ListShareLinksInput request input.
+type ListShareLinksInput struct {
+	Path string `json:"path"`
+}
+
+// SharedLinkOutput request output.
+type SharedLinkOutput struct {
+	URL             string `json:"url"`
+	Path            string `json:"path"`
+	VisibilityModel struct {
+		Tag VisibilityType `json:".tag"`
+	} `json:"visibility"`
+	Expires time.Time `json:"expires,omitempty"`
+}
+
+// ListShareLinksOutput request output.
+type ListShareLinksOutput struct {
+	Links []SharedLinkOutput `json:"links"`
+}
+
+// ListSharedLinks gets shared links of input.
+func (c *Sharing) ListSharedLinks(in *ListShareLinksInput) (out *ListShareLinksOutput, err error) {
+	endpoint := "/sharing/list_shared_links"
+	body, err := c.call(endpoint, in)
 	if err != nil {
 		return
 	}
