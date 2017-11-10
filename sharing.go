@@ -91,6 +91,22 @@ func (c *Sharing) ListSharedLinks(in *ListShareLinksInput) (out *ListShareLinksO
 	return
 }
 
+type RevokeSharedLinkInput struct {
+	Url            string `json:"url"`
+}
+
+
+func (c *Sharing) RevokeSharedLink(in *RevokeSharedLinkInput) (err error) {
+	
+	endpoint := "/sharing/revoke_shared_link"
+	_, err := c.call(endpoint, in)
+	if err != nil {
+		return
+	}
+	
+	return
+}
+
 // ListSharedFolderInput request input.
 type ListSharedFolderInput struct {
 	Limit   uint64         `json:"limit"`
