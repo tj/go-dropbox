@@ -4,9 +4,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	httpmock "gopkg.in/jarcoal/httpmock.v1"
 )
 
 func TestSharing_CreateSharedLink(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("POST", "https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings",
+		httpmock.NewStringResponder(200, `{"path":"/hello.txt"}`))
+
 	c := client()
 	out, err := c.Sharing.CreateSharedLink(&CreateSharedLinkInput{
 		Path: "/hello.txt",
@@ -17,6 +24,12 @@ func TestSharing_CreateSharedLink(t *testing.T) {
 }
 
 func TestSharing_ListSharedFolder(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("POST", "https://api.dropboxapi.com/2/sharing/list_folders",
+		httpmock.NewStringResponder(200, `{"entries":[{"name":"foo", "shared_folder_id":"321321"}]}`))
+
 	c := client()
 	out, err := c.Sharing.ListSharedFolders(&ListSharedFolderInput{
 		Limit: 1,
